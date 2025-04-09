@@ -176,12 +176,15 @@ import { BsTwitterX } from "vue-icons-plus/bs";
 import { AiFillLinkedin } from "vue-icons-plus/ai";
 import { useRouter } from "vue-router";
 import { signInWithPopup } from "firebase/auth";
+import { useAuth } from "~/composables/useAuth";
 const { $auth, $provider } = useNuxtApp();
 
 // Variabel untuk form
 const username = ref("");
 const password = ref("");
 const router = useRouter();
+
+console.log("Result:", result.value);
 
 // Fungsi untuk handle login biasa
 const handleLogin = () => {
@@ -200,8 +203,12 @@ const signInWithGoogle = async () => {
     try {
         const result = await signInWithPopup($auth, $provider);
 
-        // User berhasil sign in
-        console.log("User berhasil login:", result.user);
+        const userState = useAuth();
+        userState.value = {
+            name: result.user.displayName,
+            email: result.user.email,
+            photoURL: result.user.photoURL,
+        };
 
         // Redirect ke homepage setelah login berhasil
         router.replace("/");
