@@ -96,10 +96,12 @@ onMounted(() => {
         </div>
 
         <!-- Back Button -->
-        <NuxtLink to="/" class="back-link border-2 flex items-center justify-center rounded-full">
-            <span class="back-icon ">←Kembali ke Beranda</span> 
-        </NuxtLink>
-
+        <NuxtLink to="/" class="inline-flex items-center gap-2 px-4 py-2 font-medium text-indigo-600 transition-all duration-300 bg-white border-2 border-indigo-500 rounded-full shadow-md hover:bg-gradient-to-r hover:from-indigo-600 hover:to-purple-600 hover:text-white group">
+  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform duration-300 group-hover:translate-x-[-3px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+  </svg>
+  <span>Kembali ke Beranda</span>
+</NuxtLink>
         <!-- Product Detail Section -->
         <div v-if="product && !loading" class="product-detail">
             <div class="product-grid">

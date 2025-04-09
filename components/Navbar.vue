@@ -189,12 +189,12 @@ const handleLogout = () => {
                             >
                                 Login
                             </NuxtLink>
-                            <NuxtLink
+                            <!-- <NuxtLink
                                 to="/register"
                                 class="bg-white text-indigo-600 px-4 py-2 rounded-lg hover:bg-yellow-300 hover:text-indigo-700 transition-all duration-300 shadow-md"
                             >
                                 Register
-                            </NuxtLink>
+                            </NuxtLink> -->
                         </template>
                     </div>
                 </section>
