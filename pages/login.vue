@@ -183,6 +183,7 @@ const { $auth, $provider } = useNuxtApp();
 const username = ref("");
 const password = ref("");
 const router = useRouter();
+const result = ref(null);
 
 console.log("Result:", result.value);
 
@@ -203,12 +204,17 @@ const signInWithGoogle = async () => {
     try {
         const result = await signInWithPopup($auth, $provider);
 
+        // User berhasil sign in
+        console.log("User berhasil login:", result.user);
         const userState = useAuth();
         userState.value = {
             name: result.user.displayName,
             email: result.user.email,
             photoURL: result.user.photoURL,
         };
+        // Simpan user ke dalam localStorage
+        localStorage.setItem("user", JSON.stringify(userState.value));
+        result.value = result.user;
 
         // Redirect ke homepage setelah login berhasil
         router.replace("/");
