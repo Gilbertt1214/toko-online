@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 const products = ref([]);
 const loading = ref(true);
 const searchQuery = ref("");
@@ -9,15 +9,12 @@ const categories = ref([]);
 const fetchData = async () => {
     try {
         loading.value = true;
-        const res = await fetch("https://fakestoreapi.com/products");
+        const res = await fetch("https://api.escuelajs.co/api/v1/products");
         const data = await res.json();
         products.value = data;
 
-        // Extract unique categories
-        const uniqueCategories = [
-            ...new Set(data.map((product) => product.category)),
-        ];
-        categories.value = ["all", ...uniqueCategories];
+        // Fetch categories separately as Platzi API has a dedicated categories endpoint
+        fetchCategories();
     } catch (error) {
         console.error("Error fetching data:", error);
     } finally {
@@ -25,17 +22,31 @@ const fetchData = async () => {
     }
 };
 
+const fetchCategories = async () => {
+    try {
+        const res = await fetch("https://api.escuelajs.co/api/v1/categories");
+        const data = await res.json();
+        // Add "all" option at the beginning
+        categories.value = [
+            { id: "all", name: "All Categories" },
+            ...data
+        ];
+    } catch (error) {
+        console.error("Error fetching categories:", error);
+    }
+};
+
 const filteredProducts = computed(() => {
     return products.value.filter((product) => {
-        // Filter by search query
-        const matchesSearch = product.title
-            .toLowerCase()
-            .includes(searchQuery.value.toLowerCase());
+        // Filter by search query (title & description)
+        const matchesSearch = 
+            product.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+            product.description.toLowerCase().includes(searchQuery.value.toLowerCase());
 
         // Filter by category
         const matchesCategory =
             selectedCategory.value === "all" ||
-            product.category === selectedCategory.value;
+            product.category.id === selectedCategory.value;
 
         return matchesSearch && matchesCategory;
     });
@@ -47,6 +58,53 @@ const formatPrice = (price) => {
         currency: "IDR",
         minimumFractionDigits: 0,
     }).format(price * 15000); // Assuming conversion rate to IDR
+};
+
+// Function to get valid product image
+const getProductImage = (product) => {
+    if (!product || !product.images || product.images.length === 0) {
+        return 'https://via.placeholder.com/300x300?text=No+Image';
+    }
+    
+    const imageUrl = product.images[0];
+    
+    // Check if URL is valid
+    if (!imageUrl || typeof imageUrl !== 'string' || imageUrl.trim() === '') {
+        return 'https://via.placeholder.com/300x300?text=No+Image';
+    }
+    
+    // Check if URL is a relative path
+    if (imageUrl.startsWith('/')) {
+        return `https://api.escuelajs.co${imageUrl}`;
+    }
+    
+    return imageUrl;
+};
+
+// Function to get category image
+const getCategoryImage = (category) => {
+    if (!category || !category.image) {
+        return 'https://via.placeholder.com/150x150?text=Category';
+    }
+    
+    const imageUrl = category.image;
+    
+    // Check if URL is valid
+    if (!imageUrl || typeof imageUrl !== 'string' || imageUrl.trim() === '') {
+        return 'https://via.placeholder.com/150x150?text=Category';
+    }
+    
+    // Check if URL is a relative path
+    if (imageUrl.startsWith('/')) {
+        return `https://api.escuelajs.co${imageUrl}`;
+    }
+    
+    return imageUrl;
+};
+
+// Function to handle image loading error
+const handleImageError = (event) => {
+    event.target.src = 'https://via.placeholder.com/300x300?text=Error+Loading+Image';
 };
 
 onMounted(() => {
@@ -76,10 +134,10 @@ onMounted(() => {
                 <select v-model="selectedCategory" class="category-select">
                     <option
                         v-for="category in categories"
-                        :key="category"
-                        :value="category"
+                        :key="category.id"
+                        :value="category.id"
                     >
-                        {{ category === "all" ? "Semua Kategori" : category }}
+                        {{ category.name }}
                     </option>
                 </select>
             </div>
@@ -104,12 +162,13 @@ onMounted(() => {
                     <NuxtLink :to="`/product/${product.id}`">
                         <div class="product-image-container">
                             <img
-                                :src="product.image"
+                                :src="getProductImage(product)"
                                 :alt="product.title"
                                 class="product-image"
+                                @error="handleImageError"
                             />
                             <div class="product-category">
-                                {{ product.category }}
+                                {{ product.category?.name || 'Uncategorized' }}
                             </div>
                         </div>
 

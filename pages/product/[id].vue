@@ -8,18 +8,19 @@ const loading = ref(true);
 const quantity = ref(1);
 const activeTab = ref("description");
 const relatedProducts = ref([]);
+const activeImageIndex = ref(0); // Untuk menangani multiple images
 
 const fetchSingleProduct = async () => {
     try {
         loading.value = true;
         const res = await fetch(
-            `https://fakestoreapi.com/products/${route.params.id}`
+            `https://api.escuelajs.co/api/v1/products/${route.params.id}`
         );
         const data = await res.json();
         product.value = data;
 
         // Fetch related products from the same category
-        fetchRelatedProducts(data.category);
+        fetchRelatedProducts(data.category.id);
     } catch (error) {
         console.error("Error fetching product:", error);
     } finally {
@@ -27,12 +28,10 @@ const fetchSingleProduct = async () => {
     }
 };
 
-const fetchRelatedProducts = async (category) => {
+const fetchRelatedProducts = async (categoryId) => {
     try {
         const res = await fetch(
-            `https://fakestoreapi.com/products/category/${encodeURIComponent(
-                category
-            )}`
+            `https://api.escuelajs.co/api/v1/categories/${categoryId}/products`
         );
         let data = await res.json();
         // Remove current product and limit to 4 products
@@ -63,8 +62,8 @@ const formattedPrice = computed(() => {
 });
 
 const rating = computed(() => {
-    if (!product.value || !product.value.rating) return { rate: 0, count: 0 };
-    return product.value.rating;
+    // Platzi API doesn't have ratings, so we'll create a mock value
+    return { rate: Math.floor(Math.random() * 5) + 1, count: Math.floor(Math.random() * 100) + 1 };
 });
 
 const renderStars = computed(() => {
@@ -82,6 +81,44 @@ const renderStars = computed(() => {
     return stars.join("");
 });
 
+// Computed property to get the current main image
+const mainImage = computed(() => {
+    if (!product.value || !product.value.images || product.value.images.length === 0) {
+        return 'https://via.placeholder.com/400x400?text=No+Image'; // Fallback image
+    }
+    return product.value.images[activeImageIndex.value];
+});
+
+// Function to change active image
+const setActiveImage = (index) => {
+    if (product.value && product.value.images && index < product.value.images.length) {
+        activeImageIndex.value = index;
+    }
+};
+
+// Function to check if image URLs are valid
+const getValidImageUrl = (url) => {
+    // Check if URL is valid
+    if (!url || typeof url !== 'string' || url.trim() === '') {
+        return 'https://via.placeholder.com/100x100?text=No+Image';
+    }
+    
+    // Check if URL is a relative path
+    if (url.startsWith('/')) {
+        return `https://api.escuelajs.co${url}`;
+    }
+    
+    return url;
+};
+
+// For related product images
+const getRelatedProductImage = (relatedProduct) => {
+    if (!relatedProduct || !relatedProduct.images || relatedProduct.images.length === 0) {
+        return 'https://via.placeholder.com/200x200?text=No+Image';
+    }
+    return getValidImageUrl(relatedProduct.images[0]);
+};
+
 onMounted(() => {
     fetchSingleProduct();
 });
@@ -96,12 +133,13 @@ onMounted(() => {
         </div>
 
         <!-- Back Button -->
-        <NuxtLink to="/" class="inline-flex items-center gap-2 px-4 py-2 font-medium text-indigo-600 transition-all duration-300 bg-white border-2 border-indigo-500 rounded-full shadow-md hover:bg-gradient-to-r hover:from-indigo-600 hover:to-purple-600 hover:text-white group">
-  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform duration-300 group-hover:translate-x-[-3px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-  </svg>
-  <span>Kembali ke Beranda</span>
-</NuxtLink>
+        <NuxtLink to=".\index.vue" class="inline-flex items-center gap-2 px-4 py-2 font-medium text-indigo-600 transition-all duration-300 bg-white border-2 border-indigo-500 rounded-full shadow-md hover:bg-gradient-to-r hover:from-indigo-600 hover:to-purple-600 hover:text-white group">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform duration-300 group-hover:translate-x-[-3px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <span>Kembali </span>
+        </NuxtLink>
+        
         <!-- Product Detail Section -->
         <div v-if="product && !loading" class="product-detail">
             <div class="product-grid">
@@ -109,12 +147,31 @@ onMounted(() => {
                 <div class="product-image-section">
                     <div class="main-image-container">
                         <img
-                            :src="product.image"
+                            :src="mainImage"
                             :alt="product.title"
                             class="main-image"
+                            @error="handleImageError"
                         />
                     </div>
-                    <div class="image-badge">{{ product.category }}</div>
+                    
+                    <!-- Thumbnail Gallery -->
+                    <div v-if="product.images && product.images.length > 1" class="thumbnail-gallery">
+                        <div 
+                            v-for="(image, index) in product.images" 
+                            :key="index" 
+                            class="thumbnail-item"
+                            :class="{ active: activeImageIndex === index }"
+                            @click="setActiveImage(index)"
+                        >
+                            <img 
+                                :src="getValidImageUrl(image)" 
+                                :alt="`${product.title} view ${index+1}`"
+                                @error="handleThumbnailError"
+                            />
+                        </div>
+                    </div>
+                    
+                    <div class="image-badge">{{ product.category?.name || 'Uncategorized' }}</div>
                 </div>
 
                 <!-- Product Info Section -->
@@ -232,7 +289,7 @@ onMounted(() => {
                         <table class="product-details-table">
                             <tr>
                                 <th>Kategori</th>
-                                <td>{{ product.category }}</td>
+                                <td>{{ product.category?.name || 'Uncategorized' }}</td>
                             </tr>
                             <tr>
                                 <th>ID Produk</th>
@@ -337,7 +394,11 @@ onMounted(() => {
                             class="related-product-link"
                         >
                             <div class="related-product-image">
-                                <img :src="item.image" :alt="item.title" />
+                                <img 
+                                    :src="getRelatedProductImage(item)" 
+                                    :alt="item.title"
+                                    @error="handleImageError" 
+                                />
                             </div>
                             <div class="related-product-info">
                                 <h4 class="related-product-title">
