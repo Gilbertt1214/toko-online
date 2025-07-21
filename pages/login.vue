@@ -217,7 +217,7 @@ const signInWithGoogle = async () => {
         result.value = result.user;
 
         // Redirect ke homepage setelah login berhasil
-        router.replace("/");
+        router.replace("/product/index");
     } catch (error) {
         console.error("Error saat login dengan Google:", error);
         // Tambahkan handling error yang sesuai

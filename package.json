@@ -19,7 +19,7 @@
     "clsx": "^2.1.1",
     "firebase": "^11.6.0",
     "lucide-vue-next": "^0.487.0",
-    "nuxt": "^3.16.2",
+    "nuxt": "^4.0.0",
     "pinia": "^3.0.3",
     "reka-ui": "^2.2.0",
     "shadcn-nuxt": "^2.0.1",
@@ -29,5 +29,8 @@
     "vue": "^3.5.13",
     "vue-icons-plus": "^0.1.8",
     "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@nuxt/devtools": "^2.6.2"
   }
 }

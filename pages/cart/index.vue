@@ -1,5 +1,7 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br ">
+
+
     <!-- Empty Cart State -->
     <div v-if="cartStore.items.length === 0" class="max-w-4xl mx-auto px-4 py-16 text-center">
       <div class="bg-white rounded-2xl shadow-xl p-12 border border-purple-100">
@@ -11,7 +13,7 @@
         <h2 class="text-2xl font-bold text-gray-900 mb-4">Keranjang Anda Kosong</h2>
         <p class="text-gray-600 mb-8">Belum ada produk yang ditambahkan ke keranjang. Yuk, mulai belanja sekarang!</p>
         <NuxtLink
-          to="/product"
+          to="/"
           class="inline-flex items-center justify-center px-8 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
         >
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -63,7 +65,7 @@
               <div
                 v-for="item in store.items"
                 :key="item.id"
-                class="p-4 flex items-start space-x-4 hover:bg-purple-25"
+                class="p-4 flex items-start space-x-4 hover:bg-purple-25 transition-colors"
               >
                 <input
                   type="checkbox"
@@ -106,7 +108,7 @@
                       <button
                         @click="decreaseQuantity(item)"
                         :disabled="item.quantity <= 1"
-                        class="w-8 h-8 rounded-full border border-purple-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-purple-50 text-purple-600"
+                        class="w-8 h-8 rounded-full border border-purple-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-purple-50 text-purple-600 transition-colors"
                       >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
@@ -117,7 +119,7 @@
                       
                       <button
                         @click="increaseQuantity(item)"
-                        class="w-8 h-8 rounded-full border border-purple-300 flex items-center justify-center hover:bg-purple-50 text-purple-600"
+                        class="w-8 h-8 rounded-full border border-purple-300 flex items-center justify-center hover:bg-purple-50 text-purple-600 transition-colors"
                       >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -135,6 +137,7 @@
                       'transition-colors',
                       item.inWishlist ? 'text-red-500 hover:text-red-600' : 'text-purple-400 hover:text-purple-600'
                     ]"
+                    :title="item.inWishlist ? 'Hapus dari wishlist' : 'Tambahkan ke wishlist'"
                   >
                     <svg class="w-5 h-5" :fill="item.inWishlist ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
@@ -143,6 +146,7 @@
                   <button
                     @click="removeItem(item)"
                     class="text-purple-400 hover:text-red-500 transition-colors"
+                    title="Hapus dari keranjang"
                   >
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -158,20 +162,30 @@
             <div class="flex items-center justify-between">
               <div class="flex items-center space-x-4">
                 <span class="text-sm text-gray-600">{{ selectedItemsCount }} item dipilih</span>
+                <span class="text-xs text-purple-600" v-if="selectedItemsCount > 0">
+                  Total: Rp{{ formatPrice(subtotal) }}
+                </span>
               </div>
               <div class="flex items-center space-x-3">
                 <button
                   @click="selectAllItems"
-                  class="text-sm text-purple-600 hover:text-purple-700 font-medium"
+                  class="text-sm text-purple-600 hover:text-purple-700 font-medium transition-colors"
                 >
                   Pilih Semua
                 </button>
                 <button
                   @click="clearSelectedItems"
                   :disabled="selectedItemsCount === 0"
-                  class="text-sm text-red-600 hover:text-red-700 font-medium disabled:text-gray-400 disabled:cursor-not-allowed"
+                  class="text-sm text-red-600 hover:text-red-700 font-medium disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
                 >
-                  Hapus Dipilih
+                  Hapus Dipilih ({{ selectedItemsCount }})
+                </button>
+                <button
+                  @click="clearCart"
+                  :disabled="cartItems.length === 0"
+                  class="text-sm text-orange-600 hover:text-orange-700 font-medium disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+                >
+                  Kosongkan Keranjang
                 </button>
               </div>
             </div>
@@ -248,6 +262,19 @@
         </div>
       </div>
     </div>
+
+    <!-- Confirmation Modal -->
+    <ConfirmationModal
+      :isVisible="showConfirmModal"
+      :type="confirmConfig.type"
+      :title="confirmConfig.title"
+      :message="confirmConfig.message"
+      :details="confirmConfig.details"
+      :confirmText="confirmConfig.confirmText"
+      :cancelText="confirmConfig.cancelText"
+      @confirm="handleConfirm"
+      @cancel="handleCancel"
+    />
   </div>
 </template>
 
@@ -260,6 +287,18 @@ const cartStore = useCartStore()
 // Reactive data
 const selectAll = ref(false)
 const discount = ref(0) // For future promo functionality
+
+// Confirmation modal state
+const showConfirmModal = ref(false)
+const confirmConfig = ref({
+  type: 'warning',
+  title: 'Konfirmasi',
+  message: '',
+  details: [],
+  confirmText: 'Ya',
+  cancelText: 'Batal'
+})
+let confirmResolve = null
 
 // Group cart items by store
 const stores = computed(() => {
@@ -320,6 +359,31 @@ const formatPrice = (price) => {
 
 const handleImageError = (event) => {
   event.target.src = 'https://via.placeholder.com/80x80/8B5CF6/FFFFFF?text=No+Image'
+}
+
+// Confirmation helper
+const showConfirmation = (config) => {
+  return new Promise((resolve) => {
+    confirmConfig.value = { ...confirmConfig.value, ...config }
+    showConfirmModal.value = true
+    confirmResolve = resolve
+  })
+}
+
+const handleConfirm = () => {
+  showConfirmModal.value = false
+  if (confirmResolve) {
+    confirmResolve(true)
+    confirmResolve = null
+  }
+}
+
+const handleCancel = () => {
+  showConfirmModal.value = false
+  if (confirmResolve) {
+    confirmResolve(false)
+    confirmResolve = null
+  }
 }
 
 const toggleSelectAll = () => {
@@ -383,9 +447,18 @@ const decreaseQuantity = (item) => {
   }
 }
 
-const removeItem = (itemToRemove) => {
-  if (confirm('Apakah Anda yakin ingin menghapus produk ini dari keranjang?')) {
+const removeItem = async (itemToRemove) => {
+  const confirmed = await showConfirmation({
+    type: 'danger',
+    title: 'Hapus Produk',
+    message: `Apakah Anda yakin ingin menghapus "${itemToRemove.name}" dari keranjang?`,
+    confirmText: 'Ya, Hapus',
+    cancelText: 'Batal'
+  })
+  
+  if (confirmed) {
     cartStore.removeFromCart(itemToRemove.id)
+    cartStore.showSimpleNotification('Produk berhasil dihapus dari keranjang!')
   }
 }
 
@@ -403,7 +476,7 @@ const toggleWishlist = (item) => {
   
   // Show notification
   const message = item.inWishlist ? 'Ditambahkan ke wishlist' : 'Dihapus dari wishlist'
-  cartStore.showNotification(message)
+  cartStore.showSimpleNotification(message)
 }
 
 const selectAllItems = () => {
@@ -411,36 +484,83 @@ const selectAllItems = () => {
   toggleSelectAll()
 }
 
-const clearSelectedItems = () => {
+const clearSelectedItems = async () => {
   if (selectedItemsCount.value === 0) return
   
-  if (confirm(`Apakah Anda yakin ingin menghapus ${selectedItemsCount.value} produk yang dipilih?`)) {
+  const confirmed = await showConfirmation({
+    type: 'warning',
+    title: 'Hapus Produk Terpilih',
+    message: `Apakah Anda yakin ingin menghapus ${selectedItemsCount.value} produk yang dipilih?`,
+    details: [
+      { label: 'Jumlah produk', value: `${selectedItemsCount.value} item` },
+      { label: 'Total nilai', value: `Rp${formatPrice(subtotal.value)}` }
+    ],
+    confirmText: 'Ya, Hapus',
+    cancelText: 'Batal'
+  })
+  
+  if (confirmed) {
     const selectedIds = selectedItems.value.map(item => item.id)
     selectedIds.forEach(id => {
       cartStore.removeFromCart(id)
     })
+    cartStore.showSimpleNotification(`${selectedItemsCount.value} produk berhasil dihapus!`)
   }
 }
 
-const checkout = () => {
+const clearCart = async () => {
+  if (cartItems.value.length === 0) return
+  
+  const confirmed = await showConfirmation({
+    type: 'warning',
+    title: 'Kosongkan Keranjang',
+    message: 'Apakah Anda yakin ingin mengosongkan seluruh keranjang belanja?',
+    details: [
+      { label: 'Total produk', value: `${cartItems.value.length} item` },
+      { label: 'Total nilai', value: `Rp${formatPrice(cartStore.totalPrice)}` }
+    ],
+    confirmText: 'Ya, Kosongkan',
+    cancelText: 'Batal'
+  })
+  
+  if (confirmed) {
+    cartStore.clearCart()
+  }
+}
+
+const checkout = async () => {
   if (selectedItemsCount.value > 0) {
-    // Save selected items for checkout
-    const checkoutItems = selectedItems.value.map(item => ({
-      ...item,
-      subtotal: item.price * item.quantity
-    }))
-    
-    // Navigate to checkout with selected items
-    navigateTo({
-      path: '/checkout',
-      query: {
-        items: JSON.stringify(checkoutItems),
-        total: total.value,
-        shipping: shippingCost.value,
-        service: serviceFee.value,
-        discount: discount.value
-      }
+    const confirmed = await showConfirmation({
+      type: 'info',
+      title: 'Konfirmasi Checkout',
+      message: 'Apakah Anda yakin ingin melanjutkan ke halaman pembayaran?',
+      details: [
+        { label: 'Produk dipilih', value: `${selectedItemsCount.value} item` },
+        { label: 'Total pembayaran', value: `Rp${formatPrice(total.value)}` }
+      ],
+      confirmText: 'Ya, Checkout',
+      cancelText: 'Periksa Lagi'
     })
+    
+    if (confirmed) {
+      // Save selected items for checkout
+      const checkoutItems = selectedItems.value.map(item => ({
+        ...item,
+        subtotal: item.price * item.quantity
+      }))
+      
+      // Navigate to checkout with selected items
+      navigateTo({
+        path: '/checkout',
+        query: {
+          items: JSON.stringify(checkoutItems),
+          total: total.value,
+          shipping: shippingCost.value,
+          service: serviceFee.value,
+          discount: discount.value
+        }
+      })
+    }
   }
 }
 

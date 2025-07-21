@@ -5,6 +5,7 @@
     
     <!-- Global components -->
     <CartNotification />
+    <ConfirmationModal />
   </div>
 </template>
 

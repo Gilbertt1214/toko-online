@@ -1,10 +1,10 @@
 <template>
     <div class="min-h-screen bg-gray-50">
         <!-- Profile Header -->
-        <div class="bg-gradient-to-r from-indigo-600 to-purple-600 py-12 px-4">
+        <div class="bg-gray-50 ">
             <div class="max-w-6xl mx-auto">
-                <h1 class="text-3xl font-bold text-white">My Account</h1>
-                <div class="flex items-center mt-2 text-white/80">
+                <h1 class="text-3xl font-bold text-gray-600">My Account</h1>
+                <div class="flex items-center mt-1 text-gray-500">
                     <NuxtLink to="/" class="hover:text-white">Home</NuxtLink>
                     <span class="mx-2">›</span>
                     <span>Account</span>
