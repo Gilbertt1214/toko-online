@@ -1,53 +1,86 @@
 <script setup>
 import { ref, onMounted, computed, watch } from "vue";
 import {
-  Smartphone,
-  Laptop,
-  ShoppingCart,
-  Shirt,
-  Car,
-  Bike,
-    SprayCan,
-  Sofa
-} from 'lucide-vue-next'
-import { SprayCan } from 'lucide-vue-next'
+    Carousel,
+    CarouselContent,
+    CarouselItem,
+    CarouselNext,
+    CarouselPrevious,
+} from "@/components/ui/carousel";
 
 const categories = ref([
-  { id: 'all', name: 'All Categories' },
-  { id: 'smartphone', name: 'Smartphone' },
-  { id: 'laptop', name: 'Laptop' },
-  { id: 'groceries', name: 'Groceries' },
-  { id: 'fragrance', name: 'Fragrance' },
-  { id: 'furniture', name: 'Furniture' },
-  { id: 'tops', name: 'Tops' },
-  { id: 'automotive', name: 'Automotive' },
-  { id: 'motorcycle', name: 'Motorcycle' }
-])
+    { id: "all", name: "All Categories" },
+    { id: "smartphone", name: "Smartphone" },
+    { id: "laptop", name: "Laptop" },
+    { id: "groceries", name: "Groceries" },
+    { id: "fragrance", name: "Fragrance" },
+    { id: "furniture", name: "Furniture" },
+    { id: "tops", name: "Tops" },
+    { id: "automotive", name: "Automotive" },
+    { id: "motorcycle", name: "Motorcycle" },
+]);
 
 const products = ref([]);
 const loading = ref(true);
 const searchQuery = ref("");
-const selectedCategory = ref('all');
+const selectedCategory = ref("all");
 
 // Pagination state
 const currentPage = ref(1);
 const itemsPerPage = ref(12); // Default items per page
 const itemsPerPageOptions = [6, 12, 24, 48];
 
-// Mapping nama kategori ke ikon lucide
-const getIconComponent = (name) => {
-  const iconMap = {
-    smartphone: Smartphone,
-    laptop: Laptop,
-    groceries: ShoppingCart,
-    fragrance: SprayCan,  // Diubah disini
-    furniture: Sofa,
-    tops: Shirt,
-    automotive: Car,
-    motorcycle: Bike
-  }
-  return iconMap[name.toLowerCase()] || ShoppingCart
-}
+// Mapping nama kategori ke ikon Tailwind
+const getCategoryIcon = (categoryId) => {
+    const icons = {
+        all: `
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+      </svg>
+    `,
+        smartphone: `
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+      </svg>
+    `,
+        laptop: `
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+      </svg>
+    `,
+        groceries: `
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+      </svg>
+    `,
+        fragrance: `
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
+      </svg>
+    `,
+        furniture: `
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+      </svg>
+    `,
+        tops: `
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+      </svg>
+    `,
+        automotive: `
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+      </svg>
+    `,
+        motorcycle: `
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+      </svg>
+    `,
+    };
+    return icons[categoryId] || icons["all"];
+};
 
 const fetchData = async () => {
     try {
@@ -65,14 +98,19 @@ const fetchData = async () => {
 const filteredProducts = computed(() => {
     return products.value.filter((product) => {
         // Filter by search query (title & description)
-        const matchesSearch = 
-            product.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-            product.description.toLowerCase().includes(searchQuery.value.toLowerCase());
+        const matchesSearch =
+            product.title
+                .toLowerCase()
+                .includes(searchQuery.value.toLowerCase()) ||
+            product.description
+                .toLowerCase()
+                .includes(searchQuery.value.toLowerCase());
 
         // Filter by category
         const matchesCategory =
-            selectedCategory.value === 'all' ||
-            product.category.toLowerCase().replace(/\s+/g, '-') === selectedCategory.value;
+            selectedCategory.value === "all" ||
+            product.category.toLowerCase().replace(/\s+/g, "-") ===
+                selectedCategory.value;
 
         return matchesSearch && matchesCategory;
     });
@@ -106,7 +144,7 @@ const visiblePages = computed(() => {
     const pages = [];
     const total = totalPages.value;
     const current = currentPage.value;
-    
+
     if (total <= 7) {
         // Show all pages if total is 7 or less
         for (let i = 1; i <= total; i++) {
@@ -115,31 +153,31 @@ const visiblePages = computed(() => {
     } else {
         // Show first page
         pages.push(1);
-        
+
         if (current > 4) {
-            pages.push('...');
+            pages.push("...");
         }
-        
+
         // Show pages around current page
         const start = Math.max(2, current - 1);
         const end = Math.min(total - 1, current + 1);
-        
+
         for (let i = start; i <= end; i++) {
             if (i !== 1 && i !== total) {
                 pages.push(i);
             }
         }
-        
+
         if (current < total - 3) {
-            pages.push('...');
+            pages.push("...");
         }
-        
+
         // Show last page
         if (total > 1) {
             pages.push(total);
         }
     }
-    
+
     return pages;
 });
 
@@ -148,7 +186,7 @@ const goToPage = (page) => {
     if (page >= 1 && page <= totalPages.value && page !== currentPage.value) {
         currentPage.value = page;
         // Scroll to top when changing page
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({ top: 0, behavior: "smooth" });
     }
 };
 
@@ -181,22 +219,23 @@ const formatPrice = (price) => {
 // Function to get valid product image
 const getProductImage = (product) => {
     if (!product || !product.images || product.images.length === 0) {
-        return 'https://via.placeholder.com/300x300?text=No+Image';
+        return "https://via.placeholder.com/300x300?text=No+Image";
     }
-    
+
     const imageUrl = product.thumbnail || product.images[0];
-    
+
     // Check if URL is valid
-    if (!imageUrl || typeof imageUrl !== 'string' || imageUrl.trim() === '') {
-        return 'https://via.placeholder.com/300x300?text=No+Image';
+    if (!imageUrl || typeof imageUrl !== "string" || imageUrl.trim() === "") {
+        return "https://via.placeholder.com/300x300?text=No+Image";
     }
-    
+
     return imageUrl;
 };
 
 // Function to handle image loading error
 const handleImageError = (event) => {
-    event.target.src = 'https://via.placeholder.com/300x300?text=Error+Loading+Image';
+    event.target.src =
+        "https://via.placeholder.com/300x300?text=Error+Loading+Image";
 };
 
 // Watch for filter changes and reset to first page
@@ -218,10 +257,12 @@ onMounted(() => {
             </p>
         </header>
 
-        <div class="mb-10">
-            <h3 class="text-xl font-bold text-gray-800 mb-4">Kategori Pilihan</h3>
+        <div class="mb-32">
+            <h3 class="text-xl font-bold text-gray-800 mb-2">
+                Kategori Pilihan
+            </h3>
 
-            <div class="flex flex-wrap gap-4">
+            <div class="flex flex-wrap gap-4 mt-4">
                 <div
                     v-for="category in categories"
                     :key="category.id"
@@ -230,46 +271,49 @@ onMounted(() => {
                         'w-[110px] h-[120px] rounded-2xl border-2 cursor-pointer flex flex-col items-center justify-center gap-2 transition-all',
                         selectedCategory === category.id
                             ? 'bg-indigo-500 text-white border-indigo-500'
-                            : 'bg-white text-gray-700 border-gray-200 hover:bg-indigo-50 hover:border-indigo-300'
+                            : 'bg-white text-gray-700 border-gray-200 hover:bg-indigo-50 hover:border-indigo-300',
                     ]"
                 >
-                    <component
-                        :is="getIconComponent(category.name)"
-                        class="w-8 h-8"
-                    />
-                    <p class="text-sm font-semibold capitalize text-center">{{ category.name }}</p>
+                    <div
+                        v-html="getCategoryIcon(category.id)"
+                        class="text-current"
+                    ></div>
+                    <p class="text-sm font-semibold capitalize text-center">
+                        {{ category.name }}
+                    </p>
                 </div>
             </div>
         </div>
 
         <!-- Search Box -->
-        <div class="search-box mb-6">
+        <!-- <div class="search-box mb-6">
             <input
                 v-model="searchQuery"
                 type="text"
                 placeholder="Cari produk..."
                 class="search-input"
             />
-        </div>
+        </div> -->
 
         <!-- Results Summary and Items Per Page -->
         <div class="results-bar" v-if="!loading">
             <div class="results-info">
                 <span class="results-text">
-                    Menampilkan {{ startItem }}-{{ endItem }} dari {{ totalItems }} produk
+                    Menampilkan {{ startItem }}-{{ endItem }} dari
+                    {{ totalItems }} produk
                 </span>
             </div>
             <div class="items-per-page">
                 <label for="itemsPerPage" class="items-label">Tampilkan:</label>
-                <select 
+                <select
                     id="itemsPerPage"
-                    v-model="itemsPerPage" 
+                    v-model="itemsPerPage"
                     @change="changeItemsPerPage(itemsPerPage)"
                     class="items-select"
                 >
-                    <option 
-                        v-for="option in itemsPerPageOptions" 
-                        :key="option" 
+                    <option
+                        v-for="option in itemsPerPageOptions"
+                        :key="option"
                         :value="option"
                     >
                         {{ option }}
@@ -306,16 +350,21 @@ onMounted(() => {
                                     @error="handleImageError"
                                 />
                                 <div class="product-category">
-                                    {{ product.category || 'Uncategorized' }}
+                                    {{ product.category || "Uncategorized" }}
                                 </div>
                             </div>
 
                             <div class="product-details">
-                                <h2 class="product-title">{{ product.title }}</h2>
+                                <h2 class="product-title">
+                                    {{ product.title }}
+                                </h2>
                                 <p class="product-description">
                                     {{
                                         product.description
-                                            ? product.description.substring(0, 100) + "..."
+                                            ? product.description.substring(
+                                                  0,
+                                                  100
+                                              ) + "..."
                                             : "No description available"
                                     }}
                                 </p>
@@ -336,14 +385,24 @@ onMounted(() => {
                 <div class="pagination-container" v-if="totalPages > 1">
                     <div class="pagination">
                         <!-- Previous Button -->
-                        <button 
+                        <button
                             @click="goToPreviousPage"
                             :disabled="currentPage === 1"
                             class="pagination-btn pagination-prev"
-                            :class="{ 'disabled': currentPage === 1 }"
+                            :class="{ disabled: currentPage === 1 }"
                         >
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                            <svg
+                                class="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M15 19l-7-7 7-7"
+                                ></path>
                             </svg>
                             <span class="hidden sm:inline">Previous</span>
                         </button>
@@ -357,9 +416,9 @@ onMounted(() => {
                                 :class="[
                                     'pagination-number',
                                     {
-                                        'active': page === currentPage,
-                                        'dots': page === '...'
-                                    }
+                                        active: page === currentPage,
+                                        dots: page === '...',
+                                    },
                                 ]"
                                 :disabled="page === '...'"
                             >
@@ -368,15 +427,25 @@ onMounted(() => {
                         </div>
 
                         <!-- Next Button -->
-                        <button 
+                        <button
                             @click="goToNextPage"
                             :disabled="currentPage === totalPages"
                             class="pagination-btn pagination-next"
-                            :class="{ 'disabled': currentPage === totalPages }"
+                            :class="{ disabled: currentPage === totalPages }"
                         >
                             <span class="hidden sm:inline">Next</span>
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            <svg
+                                class="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M9 5l7 7-7 7"
+                                ></path>
                             </svg>
                         </button>
                     </div>
