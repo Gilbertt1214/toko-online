@@ -1,7 +1,5 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br ">
-
-
     <!-- Empty Cart State -->
     <div v-if="cartStore.items.length === 0" class="max-w-4xl mx-auto px-4 py-16 text-center">
       <div class="bg-white rounded-2xl shadow-xl p-12 border border-purple-100">
@@ -253,7 +251,7 @@
 
             <!-- Continue Shopping -->
             <NuxtLink
-              to="/product"
+              to="/index"
               class="w-full mt-3 bg-white border-2 border-purple-600 text-purple-600 py-3 px-4 rounded-xl font-semibold hover:bg-purple-50 transition-all duration-300 text-center block"
             >
               Lanjut Belanja

@@ -277,26 +277,15 @@
         </div>
 
         <!-- Bottom Copyright -->
-        <div class="bg-indigo-600 text-white py-4">
+        <div class="border-gray-200 text-black  py-4">
             <div class="max-w-6xl mx-auto px-4">
                 <div
-                    class="flex flex-col md:flex-row justify-between items-center"
+                    class="flex flex-col   md: justify-between items-center"
                 >
                     <p class="mb-4 md:mb-0">
                         &copy; 2025 Toko Online. Hak Cipta Dilindungi.
                     </p>
-                    <div class="flex space-x-4">
-                        <a
-                            href="#"
-                            class="text-white hover:text-indigo-200 transition"
-                            >Syarat dan Ketentuan</a
-                        >
-                        <a
-                            href="#"
-                            class="text-white hover:text-indigo-200 transition"
-                            >Kebijakan Privasi</a
-                        >
-                    </div>
+                    
                 </div>
             </div>
         </div>

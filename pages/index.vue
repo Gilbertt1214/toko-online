@@ -1,23 +1,59 @@
 <script setup>
 import { ref, onMounted, computed, watch } from "vue";
 import {
+    DropdownMenu,
+    DropdownMenuTrigger,
+    DropdownMenuContent,
+    DropdownMenuLabel,
+    DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import {
     Carousel,
     CarouselContent,
     CarouselItem,
     CarouselNext,
     CarouselPrevious,
 } from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
+
+// Setup autoplay plugin
+const autoplay = Autoplay({
+    delay: 3000,
+    stopOnInteraction: true,
+});
+
+// Import gambar dari assets
+import image1 from "~/assets/image/1.png";
+import image2 from "~/assets/image/2.png";
+import image3 from "~/assets/image/3.png";
+
+// Carousel images data
+const carouselImages = ref([
+    {
+        src: image1,
+        alt: "Banner 1",
+    },
+    {
+        src: image2,
+        alt: "Banner 2",
+    },
+    {
+        src: image3,
+        alt: "Banner 3",
+    },
+]);
 
 const categories = ref([
     { id: "all", name: "All Categories" },
-    { id: "smartphone", name: "Smartphone" },
-    { id: "laptop", name: "Laptop" },
+    { id: "laptops", name: "Laptops" },
+    { id: "fragrances", name: "Fragrances" },
     { id: "groceries", name: "Groceries" },
-    { id: "fragrance", name: "Fragrance" },
+    { id: "home-decoration", name: "Home Decoration" },
     { id: "furniture", name: "Furniture" },
-    { id: "tops", name: "Tops" },
-    { id: "automotive", name: "Automotive" },
-    { id: "motorcycle", name: "Motorcycle" },
+    { id: "womens-dresses", name: "Women's Dresses" },
+    { id: "mens-shirts", name: "Men's Shirts" },
+    { id: "mens-shoes", name: "Men's Shoes" },
+    { id: "mens-watches", name: "Men's Watches" },
 ]);
 
 const products = ref([]);
@@ -27,57 +63,21 @@ const selectedCategory = ref("all");
 
 // Pagination state
 const currentPage = ref(1);
-const itemsPerPage = ref(12); // Default items per page
+const itemsPerPage = ref(12);
 const itemsPerPageOptions = [6, 12, 24, 48];
 
-// Mapping nama kategori ke ikon Tailwind
 const getCategoryIcon = (categoryId) => {
     const icons = {
-        all: `
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-      </svg>
-    `,
-        smartphone: `
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-      </svg>
-    `,
-        laptop: `
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-      </svg>
-    `,
-        groceries: `
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-      </svg>
-    `,
-        fragrance: `
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
-      </svg>
-    `,
-        furniture: `
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-      </svg>
-    `,
-        tops: `
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-      </svg>
-    `,
-        automotive: `
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-      </svg>
-    `,
-        motorcycle: `
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-      </svg>
-    `,
+        all: "grid",
+        laptops: "laptop",
+        fragrances: "spray-can",
+        groceries: "shopping-cart",
+        "home-decoration": "home",
+        furniture: "sofa",
+        "womens-dresses": "shirt",
+        "mens-shirts": "shirt",
+        "mens-shoes": "footprints",
+        "mens-watches": "watch",
     };
     return icons[categoryId] || icons["all"];
 };
@@ -97,7 +97,6 @@ const fetchData = async () => {
 
 const filteredProducts = computed(() => {
     return products.value.filter((product) => {
-        // Filter by search query (title & description)
         const matchesSearch =
             product.title
                 .toLowerCase()
@@ -106,7 +105,6 @@ const filteredProducts = computed(() => {
                 .toLowerCase()
                 .includes(searchQuery.value.toLowerCase());
 
-        // Filter by category
         const matchesCategory =
             selectedCategory.value === "all" ||
             product.category.toLowerCase().replace(/\s+/g, "-") ===
@@ -118,10 +116,9 @@ const filteredProducts = computed(() => {
 
 // Pagination computed properties
 const totalItems = computed(() => filteredProducts.value.length);
-
-const totalPages = computed(() => {
-    return Math.ceil(totalItems.value / itemsPerPage.value);
-});
+const totalPages = computed(() =>
+    Math.ceil(totalItems.value / itemsPerPage.value)
+);
 
 const paginatedProducts = computed(() => {
     const start = (currentPage.value - 1) * itemsPerPage.value;
@@ -130,8 +127,9 @@ const paginatedProducts = computed(() => {
 });
 
 const startItem = computed(() => {
-    if (totalItems.value === 0) return 0;
-    return (currentPage.value - 1) * itemsPerPage.value + 1;
+    return totalItems.value === 0
+        ? 0
+        : (currentPage.value - 1) * itemsPerPage.value + 1;
 });
 
 const endItem = computed(() => {
@@ -146,36 +144,20 @@ const visiblePages = computed(() => {
     const current = currentPage.value;
 
     if (total <= 7) {
-        // Show all pages if total is 7 or less
-        for (let i = 1; i <= total; i++) {
-            pages.push(i);
-        }
+        for (let i = 1; i <= total; i++) pages.push(i);
     } else {
-        // Show first page
         pages.push(1);
+        if (current > 4) pages.push("...");
 
-        if (current > 4) {
-            pages.push("...");
-        }
-
-        // Show pages around current page
         const start = Math.max(2, current - 1);
         const end = Math.min(total - 1, current + 1);
 
         for (let i = start; i <= end; i++) {
-            if (i !== 1 && i !== total) {
-                pages.push(i);
-            }
+            if (i !== 1 && i !== total) pages.push(i);
         }
 
-        if (current < total - 3) {
-            pages.push("...");
-        }
-
-        // Show last page
-        if (total > 1) {
-            pages.push(total);
-        }
+        if (current < total - 3) pages.push("...");
+        if (total > 1) pages.push(total);
     }
 
     return pages;
@@ -185,26 +167,17 @@ const visiblePages = computed(() => {
 const goToPage = (page) => {
     if (page >= 1 && page <= totalPages.value && page !== currentPage.value) {
         currentPage.value = page;
-        // Scroll to top when changing page
         window.scrollTo({ top: 0, behavior: "smooth" });
     }
 };
 
-const goToPreviousPage = () => {
-    if (currentPage.value > 1) {
-        goToPage(currentPage.value - 1);
-    }
-};
-
-const goToNextPage = () => {
-    if (currentPage.value < totalPages.value) {
-        goToPage(currentPage.value + 1);
-    }
-};
-
+const goToPreviousPage = () =>
+    currentPage.value > 1 && goToPage(currentPage.value - 1);
+const goToNextPage = () =>
+    currentPage.value < totalPages.value && goToPage(currentPage.value + 1);
 const changeItemsPerPage = (newItemsPerPage) => {
     itemsPerPage.value = newItemsPerPage;
-    currentPage.value = 1; // Reset to first page
+    currentPage.value = 1;
 };
 
 // Utility functions
@@ -213,98 +186,129 @@ const formatPrice = (price) => {
         style: "currency",
         currency: "IDR",
         minimumFractionDigits: 0,
-    }).format(price * 15000); // Assuming conversion rate to IDR
+    }).format(price * 15000);
 };
 
-// Function to get valid product image
 const getProductImage = (product) => {
-    if (!product || !product.images || product.images.length === 0) {
+    if (!product?.images?.length)
         return "https://via.placeholder.com/300x300?text=No+Image";
-    }
-
     const imageUrl = product.thumbnail || product.images[0];
-
-    // Check if URL is valid
-    if (!imageUrl || typeof imageUrl !== "string" || imageUrl.trim() === "") {
-        return "https://via.placeholder.com/300x300?text=No+Image";
-    }
-
-    return imageUrl;
+    return imageUrl?.trim()
+        ? imageUrl
+        : "https://via.placeholder.com/300x300?text=No+Image";
 };
 
-// Function to handle image loading error
 const handleImageError = (event) => {
     event.target.src =
         "https://via.placeholder.com/300x300?text=Error+Loading+Image";
 };
 
-// Watch for filter changes and reset to first page
+const handleCarouselImageError = (event) => {
+    event.target.src = "https://via.placeholder.com/1200x400?text=Banner+Image";
+};
+
+// Watchers
 watch([searchQuery, selectedCategory], () => {
     currentPage.value = 1;
 });
 
-onMounted(() => {
-    fetchData();
-});
+// Lifecycle
+onMounted(fetchData);
 </script>
 
 <template>
     <div class="container">
-        <header class="header">
-            <h1 class="title">Katalog Produk</h1>
-            <p class="subtitle">
-                Temukan produk berkualitas terbaik untuk Anda
-            </p>
+        <!-- Hero Carousel Section -->
+        <header class="mb-12">
+            <Carousel
+                :opts="{
+                    loop: true,
+                    align: 'start',
+                }"
+                :plugins="[autoplay]"
+                class="w-full"
+            >
+                <CarouselContent>
+                    <CarouselItem
+                        v-for="(slide, index) in carouselImages"
+                        :key="index"
+                        class="w-full"
+                    >
+                        <div
+                            class="relative h-96 w-full overflow-hidden rounded-lg bg-gradient-to-r from-blue-500 to-purple-600"
+                        >
+                            <img
+                                :src="slide.src"
+                                :alt="slide.alt"
+                                class="w-full h-full object-cover"
+                                @error="handleCarouselImageError"
+                            />
+                        </div>
+                    </CarouselItem>
+                </CarouselContent>
+
+                <CarouselPrevious class="left-4" />
+                <CarouselNext class="right-4" />
+            </Carousel>
         </header>
 
-        <div class="mb-32">
-            <h3 class="text-xl font-bold text-gray-800 mb-2">
-                Kategori Pilihan
-            </h3>
+        <!-- Category Filter -->
+        <div class="mb-5">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Categories</h3>
 
-            <div class="flex flex-wrap gap-4 mt-4">
-                <div
-                    v-for="category in categories"
-                    :key="category.id"
-                    @click="selectedCategory = category.id"
-                    :class="[
-                        'w-[110px] h-[120px] rounded-2xl border-2 cursor-pointer flex flex-col items-center justify-center gap-2 transition-all',
-                        selectedCategory === category.id
-                            ? 'bg-indigo-500 text-white border-indigo-500'
-                            : 'bg-white text-gray-700 border-gray-200 hover:bg-indigo-50 hover:border-indigo-300',
-                    ]"
+            <DropdownMenu>
+                <DropdownMenuTrigger
+                    class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
                 >
-                    <div
-                        v-html="getCategoryIcon(category.id)"
-                        class="text-current"
-                    ></div>
-                    <p class="text-sm font-semibold capitalize text-center">
-                        {{ category.name }}
-                    </p>
-                </div>
-            </div>
+                    <span class="font-medium">{{
+                        categories.find((c) => c.id === selectedCategory)
+                            ?.name || "Select Category"
+                    }}</span>
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M19 9l-7 7-7-7"
+                        />
+                    </svg>
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent class="w-56 max-h-96 overflow-y-auto">
+                    <DropdownMenuLabel>Select Category</DropdownMenuLabel>
+                    <DropdownMenuItem
+                        v-for="category in categories"
+                        :key="category.id"
+                        @click="selectedCategory = category.id"
+                        :class="[
+                            'flex items-center gap-2 cursor-pointer',
+                            selectedCategory === category.id
+                                ? 'bg-indigo-50 text-indigo-600'
+                                : '',
+                        ]"
+                    >
+                        <span class="capitalize">{{ category.name }}</span>
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
         </div>
 
-        <!-- Search Box -->
-        <!-- <div class="search-box mb-6">
-            <input
-                v-model="searchQuery"
-                type="text"
-                placeholder="Cari produk..."
-                class="search-input"
-            />
-        </div> -->
-
-        <!-- Results Summary and Items Per Page -->
+        <!-- Results Summary -->
         <div class="results-bar" v-if="!loading">
             <div class="results-info">
                 <span class="results-text">
-                    Menampilkan {{ startItem }}-{{ endItem }} dari
-                    {{ totalItems }} produk
+                    Showing {{ startItem }}-{{ endItem }} of
+                    {{ totalItems }} products
                 </span>
             </div>
             <div class="items-per-page">
-                <label for="itemsPerPage" class="items-label">Tampilkan:</label>
+                <label for="itemsPerPage" class="items-label">Show:</label>
                 <select
                     id="itemsPerPage"
                     v-model="itemsPerPage"
@@ -319,38 +323,73 @@ onMounted(() => {
                         {{ option }}
                     </option>
                 </select>
-                <span class="items-label">per halaman</span>
+                <span class="items-label">per page</span>
             </div>
         </div>
 
+        <!-- Loading State -->
         <div class="loader" v-if="loading">
             <div class="spinner"></div>
-            <p>Memuat produk...</p>
+            <p>Loading products...</p>
         </div>
 
+        <!-- Products Grid -->
         <div v-else>
-            <p v-if="filteredProducts.length === 0" class="no-results">
-                Tidak ada produk yang ditemukan.
-            </p>
+            <div v-if="filteredProducts.length === 0" class="no-results">
+                <div class="text-center py-16">
+                    <svg
+                        class="mx-auto h-16 w-16 text-gray-400 mb-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.29-1.009-5.824-2.562M15 3.512V2a10 10 0 00-9.542 13.066M15 3.512A10 10 0 0121 13l-3.288-2.192"
+                        />
+                    </svg>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">
+                        No products found
+                    </h3>
+                    <p class="text-gray-500">
+                        Try adjusting your search or filter criteria
+                    </p>
+                </div>
+            </div>
 
             <div v-else>
-                <!-- Products Grid -->
                 <div class="products-grid">
                     <div
                         v-for="product in paginatedProducts"
                         :key="product.id"
                         class="product-card"
                     >
-                        <NuxtLink :to="`/product/${product.id}`">
+                        <NuxtLink
+                            :to="`/product/${product.id}`"
+                            class="block h-full"
+                        >
                             <div class="product-image-container">
                                 <img
                                     :src="getProductImage(product)"
                                     :alt="product.title"
                                     class="product-image"
                                     @error="handleImageError"
+                                    loading="lazy"
                                 />
                                 <div class="product-category">
                                     {{ product.category || "Uncategorized" }}
+                                </div>
+
+                                <!-- Discount badge if available -->
+                                <div
+                                    v-if="product.discountPercentage"
+                                    class="product-discount"
+                                >
+                                    -{{
+                                        Math.round(product.discountPercentage)
+                                    }}%
                                 </div>
                             </div>
 
@@ -368,12 +407,63 @@ onMounted(() => {
                                             : "No description available"
                                     }}
                                 </p>
+
+                                <!-- Rating -->
+                                <div
+                                    class="product-rating"
+                                    v-if="product.rating"
+                                >
+                                    <div class="flex items-center gap-1">
+                                        <svg
+                                            v-for="i in 5"
+                                            :key="i"
+                                            class="w-4 h-4"
+                                            :class="
+                                                i <= Math.round(product.rating)
+                                                    ? 'text-yellow-400'
+                                                    : 'text-gray-300'
+                                            "
+                                            fill="currentColor"
+                                            viewBox="0 0 20 20"
+                                        >
+                                            <path
+                                                d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                                            />
+                                        </svg>
+                                        <span class="text-sm text-gray-600 ml-1"
+                                            >({{ product.rating }})</span
+                                        >
+                                    </div>
+                                </div>
+
                                 <div class="product-footer">
-                                    <p class="product-price">
-                                        {{ formatPrice(product.price) }}
-                                    </p>
-                                    <button class="buy-button">
-                                        Beli Sekarang
+                                    <div class="price-container">
+                                        <p class="product-price">
+                                            {{ formatPrice(product.price) }}
+                                        </p>
+                                        <p
+                                            v-if="product.discountPercentage"
+                                            class="original-price"
+                                        >
+                                            {{
+                                                formatPrice(
+                                                    product.price /
+                                                        (1 -
+                                                            product.discountPercentage /
+                                                                100)
+                                                )
+                                            }}
+                                        </p>
+                                    </div>
+                                    <button
+                                        class="buy-button"
+                                        @click.prevent="
+                                            $router.push(
+                                                `/product/${product.id}`
+                                            )
+                                        "
+                                    >
+                                        Buy Now
                                     </button>
                                 </div>
                             </div>
@@ -384,7 +474,6 @@ onMounted(() => {
                 <!-- Pagination -->
                 <div class="pagination-container" v-if="totalPages > 1">
                     <div class="pagination">
-                        <!-- Previous Button -->
                         <button
                             @click="goToPreviousPage"
                             :disabled="currentPage === 1"
@@ -402,12 +491,11 @@ onMounted(() => {
                                     stroke-linejoin="round"
                                     stroke-width="2"
                                     d="M15 19l-7-7 7-7"
-                                ></path>
+                                />
                             </svg>
                             <span class="hidden sm:inline">Previous</span>
                         </button>
 
-                        <!-- Page Numbers -->
                         <div class="pagination-numbers">
                             <button
                                 v-for="page in visiblePages"
@@ -426,7 +514,6 @@ onMounted(() => {
                             </button>
                         </div>
 
-                        <!-- Next Button -->
                         <button
                             @click="goToNextPage"
                             :disabled="currentPage === totalPages"
@@ -445,15 +532,14 @@ onMounted(() => {
                                     stroke-linejoin="round"
                                     stroke-width="2"
                                     d="M9 5l7 7-7 7"
-                                ></path>
+                                />
                             </svg>
                         </button>
                     </div>
 
-                    <!-- Page Info -->
                     <div class="page-info">
                         <span class="page-text">
-                            Halaman {{ currentPage }} dari {{ totalPages }}
+                            Page {{ currentPage }} of {{ totalPages }}
                         </span>
                     </div>
                 </div>
@@ -463,13 +549,7 @@ onMounted(() => {
 </template>
 
 <style scoped>
-/* Base styles & CSS reset */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
+/* Base styles */
 .container {
     max-width: 1200px;
     margin: 0 auto;
@@ -477,49 +557,10 @@ onMounted(() => {
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Header */
-.header {
-    text-align: center;
-    margin-bottom: 40px;
-    padding: 20px 0;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    color: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.title {
-    font-size: 2.5rem;
-    margin-bottom: 10px;
-    font-weight: 700;
-}
-
-.subtitle {
-    font-size: 1.1rem;
-    opacity: 0.8;
-}
-
-/* Search Box */
-.search-box {
-    width: 100%;
-    max-width: 500px;
-    margin: 0 auto;
-}
-
-.search-input {
-    width: 100%;
-    padding: 12px 15px;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    font-size: 16px;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.search-input:focus {
-    outline: none;
-    border-color: #6366f1;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+/* Carousel custom styles */
+.carousel-container {
+    position: relative;
+    margin-bottom: 2rem;
 }
 
 /* Results Bar */
@@ -593,10 +634,9 @@ onMounted(() => {
 }
 
 .no-results {
-    text-align: center;
-    padding: 40px;
-    font-size: 18px;
-    color: #64748b;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 /* Products Grid */
@@ -615,6 +655,7 @@ onMounted(() => {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
+    height: 100%;
 }
 
 .product-card:hover {
@@ -658,6 +699,18 @@ onMounted(() => {
     letter-spacing: 0.5px;
 }
 
+.product-discount {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background-color: #ef4444;
+    color: white;
+    padding: 5px 8px;
+    font-size: 0.75rem;
+    border-radius: 12px;
+    font-weight: 600;
+}
+
 .product-details {
     padding: 20px;
     display: flex;
@@ -689,6 +742,10 @@ onMounted(() => {
     -webkit-box-orient: vertical;
 }
 
+.product-rating {
+    margin-bottom: 10px;
+}
+
 .product-footer {
     display: flex;
     justify-content: space-between;
@@ -696,10 +753,22 @@ onMounted(() => {
     margin-top: auto;
 }
 
+.price-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
 .product-price {
     font-size: 1.2rem;
     font-weight: 700;
     color: #6366f1;
+}
+
+.original-price {
+    font-size: 0.9rem;
+    color: #94a3b8;
+    text-decoration: line-through;
 }
 
 .buy-button {
@@ -821,22 +890,10 @@ onMounted(() => {
         gap: 15px;
     }
 
-    .header {
-        padding: 15px 0;
-    }
-
-    .title {
-        font-size: 2rem;
-    }
-
     .results-bar {
         flex-direction: column;
         gap: 10px;
         align-items: stretch;
-    }
-
-    .items-per-page {
-        justify-content: center;
     }
 
     .pagination {

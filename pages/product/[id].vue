@@ -3,9 +3,17 @@ import { useRoute } from "vue-router";
 import { onMounted, ref, computed } from "vue";
 import { useCartStore } from '~/stores/cart';
 import  CartNotification from '~/components/CartNotification.vue';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb'
+
 const route = useRoute();
 const cartStore = useCartStore();
-
 const product = ref(null);
 const loading = ref(true);
 const quantity = ref(1);
@@ -176,6 +184,19 @@ onMounted(() => {
             <div class="spinner"></div>
             <p>Memuat detail produk...</p>
         </div>
+
+          <!-- Breadcrumb Navigation -->
+        <Breadcrumb class="mb-6 product-header-nav">
+            <BreadcrumbList>
+                <BreadcrumbItem>
+                    <BreadcrumbLink href="/">Home</BreadcrumbLink>
+                    <BreadcrumbSeparator>/</BreadcrumbSeparator>
+                </BreadcrumbItem>
+                <BreadcrumbItem v-if="product">
+                    <BreadcrumbPage>{{ product.title }}</BreadcrumbPage>
+                </BreadcrumbItem>
+            </BreadcrumbList>
+        </Breadcrumb>
         <CartNotification />
         <!-- Product Detail Section -->
         <div v-if="product && !loading" class="product-detail">
@@ -190,7 +211,6 @@ onMounted(() => {
                             @error="handleImageError"
                         />
                     </div>
-                    
                     <!-- Thumbnail Gallery -->
                     <div v-if="thumbnailGallery.length > 1" class="thumbnail-gallery">
                         <div 
@@ -531,10 +551,11 @@ onMounted(() => {
 /* Header Navigation */
 .product-header-nav {
     display: flex;
+    font: 600 1rem "Segoe UI", sans-serif bold;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 30px;
-    padding: 10px 0;
+    margin-bottom: 3px;
+    padding: 10px ;
 }
 
 /* Loading Animation */
