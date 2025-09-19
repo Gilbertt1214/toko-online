@@ -1,6 +1,6 @@
 <script setup>
 import { BiSolidShoppingBags } from "vue-icons-plus/bi";
-import { BsCart4, BsChatDots, BsSearch } from "vue-icons-plus/bs"; // Import search icon
+import { BsCart4, BsChatDots, BsSearch } from "vue-icons-plus/bs"; 
 import { useAuth } from "~/composables/useAuth";
 import { useRouter } from "vue-router";
 import { useCartStore } from "~/stores/cart";
@@ -275,28 +275,12 @@ onUnmounted(() => {
 
                 <section class="flex justify-end items-center gap-6">
                     <!-- Navigation Links with hover effects -->
-                    <div class="flex items-center space-x-6">
-                        <!-- <NuxtLink
-                            to="/product"
-                            class="flex items-center text-white opacity-90 hover:opacity-100 relative group"
-                        >
-                            <h4 class="text-lg font-medium flex items-center">
-                                Produk
-                            </h4>
-                            <span class="absolute -bottom-2 left-0 w-0 h-0.5 bg-white transition-all duration-300 group-hover:w-full"></span>
-                        </NuxtLink> -->
-                    </div>
+                    
 
                     <!-- Right side of Navbar -->
                     <div class="flex items-center space-x-5">
-                        <!-- Chat Icon -->
-                        <NuxtLink to="/chat" class="relative">
-                            <div class="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-all duration-300">
-                                <BsChatDots class="w-6 h-6 text-white" />
-                            </div>
-                            <!-- Optional notification indicator -->
-                            <span class="absolute -top-1 -right-1 w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center text-xs font-bold">2</span>
-                        </NuxtLink>
+                   
+                      
 
                         <!-- Cart Icon -->
                         <NuxtLink to="/cart" class="relative">
@@ -392,6 +376,34 @@ onUnmounted(() => {
 
 .overflow-y-auto::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
+}
+
+/* DropdownMenuContent: buat background solid dan hilangkan transparansi */
+:deep(.dropdown-menu__content),
+:deep(.dropdown-menu-content),
+:deep(.DropdownMenuContent),
+:deep(.w-52.mt-2),
+:deep([data-radix-popper-content-wrapper] > div),
+:deep(.bg-white\/80),
+:deep(.bg-white\/90),
+:deep(.bg-white\/70) {
+  background: #fff !important;
+  background-color: #fff !important;
+  opacity: 1 !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 1.5px 4px rgba(0,0,0,0.08) !important;
+  border: 1px solid #e5e7eb !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  filter: none !important;
+}
+
+/* Hilangkan transparansi pada label dan item jika ada */
+:deep(.dropdown-menu__label),
+:deep(.dropdown-menu__item),
+:deep(.DropdownMenuLabel),
+:deep(.DropdownMenuItem) {
+  background: transparent !important;
+  opacity: 1 !important;
 }
 
 /* Backdrop blur support */
